@@ -22,13 +22,13 @@ public class App
     	JavaPairRDD<String, Iterable<String>> listaWithId = lista.groupBy(l -> l.substring(0, l.indexOf('#')));
     	
     	JavaRDD<String> nazwyArt = sc.textFile("simple/temp-po_slowach-articles_dict-simple-20120104");
-    	JavaPairRDD<String, Tuple2<Iterable<String>, Iterable<String>>> artZeSlowami = nazwyArt.groupBy(f -> f.substring(f.indexOf(' ') + 1)).join(listaWithId);
+    	JavaPairRDD<String, Tuple2<Iterable<String>, Iterable<String>>> artZeSlowami = nazwyArt.groupBy(f -> f.substring(f.indexOf('\t') + 1)).join(listaWithId);
     	
     	
-    	artZeSlowami.foreach(f -> System.out.println(f));
-    	artZeSlowami.filter(t -> t._2._2.iterator().next().contains("#1-")).foreach(f -> System.out.println(f));
-    	
-    	
-    	System.out.println("ehlo");
+    	JavaPairRDD<String, Tuple2<Iterable<String>, Iterable<String>>> artZeSlowem1 = artZeSlowami.filter(t -> t._2._2.iterator().next().contains("#1-"));
+    	artZeSlowem1.foreach(f -> {
+    		String namePair = f._2._1.iterator().next();
+    		System.out.println(namePair.substring(0, namePair.indexOf('\t')));
+    	});
     }
 }
