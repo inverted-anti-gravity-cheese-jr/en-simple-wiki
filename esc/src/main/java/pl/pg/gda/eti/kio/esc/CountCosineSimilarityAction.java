@@ -41,11 +41,13 @@ public class CountCosineSimilarityAction implements SparkAction {
             JavaPairRDD<String, Tuple2<String, String>> filtered = wordDictionary.filter((t) ->
                     t._2._2.equals(word.substring(0, word.indexOf('-')))
             );
-            commonWords.add(new Tuple3<String, Double, Double>(
-                    filtered.first()._1,
-                    0.0,
-                    Double.parseDouble(word.substring(word.indexOf('-') + 1)))
-            );
+            if(!filtered.isEmpty()) {
+                commonWords.add(new Tuple3<String, Double, Double>(
+                        filtered.first()._1,
+                        0.0,
+                        Double.parseDouble(word.substring(word.indexOf('-') + 1)))
+                );
+            }
         }
 
     }
