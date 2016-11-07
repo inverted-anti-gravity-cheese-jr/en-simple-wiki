@@ -1,3 +1,7 @@
 /target/
 /.idea
 esc.iml
+.vscode/
+en/
+simple/
+temp-data/
