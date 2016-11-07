@@ -26,7 +26,9 @@ public class App
 
 		// TODO: wyliczyć prawdopodobieństwo cosinusowe
 		// https://janav.wordpress.com/2013/10/27/tf-idf-and-cosine-similarity/
-		new CountCosineSimilarityAction().doAction(sc);
+		CountCosineSimilarityAction countCosineSimilarityAction = new CountCosineSimilarityAction();
+		countCosineSimilarityAction.setWordDictionary(unifiedWordDictionary);
+		countCosineSimilarityAction.doAction(sc);
 		// TODO: na podstawie najlepszego artykułu wyznaczyć główną kategorię dla niego (myślę że można założyć, że pierwsza na liście w "cats_dict" to jest główna kategoria)
 
 		sc.close();

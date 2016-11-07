@@ -11,7 +11,7 @@ import scala.Tuple2;
 import java.io.*;
 import java.util.StringTokenizer;
 
-public class MergeWordDictionaryAction implements SparkAction, Serializable {
+public class MergeWordDictionaryAction implements SparkAction {
 
     private PairFunction<String, String, String> mappingFunction = new PairFunction<String, String, String>() {
         @Override
