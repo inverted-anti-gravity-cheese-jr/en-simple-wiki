@@ -34,8 +34,6 @@ public class DictionaryApplier {
         DictionaryApplierNode[] workerNodes = new DictionaryApplierNode[numCores - 1];
         ExecutorService executor = Executors.newFixedThreadPool(numCores - 1);
 
-        System.out.println("Started master");
-
 
         for(i = 0; i < numCores - 1; i++) {
             workerNodes[i] = new DictionaryApplierNode(this, chunks[i], numCores - 1, simple);
@@ -53,33 +51,25 @@ public class DictionaryApplier {
             if (!linesToSave.isEmpty()) {
                 outputStream.write(linesToSave.poll() + "\n");
                 linesBalance--;
-                System.out.println("Saved line");
+                System.out.println(linesBalance + ",sv " + linesToSave.size() + ",tk " + linesToTake.size());
             }
 
             if(line == null || linesToTake.size() >= MAX_LOAD) {
-                if(linesToTake.size() >= MAX_LOAD)
-                    System.out.println("Maxed load");
                 continue;
             }
 
             line = stream.readLine();
+
             if(line != null) {
-                System.out.println("Took line");
                 linesToTake.add(line);
                 linesBalance++;
             }
-        }while (line != null || !linesToSave.isEmpty() || ! linesToTake.isEmpty() || linesBalance != 0);
-
-        System.out.println("Finnished, closing workers");
+        }while (!linesToSave.isEmpty() || !linesToTake.isEmpty() || linesBalance != 0);
 
         for(i = 0; i < numCores - 1; i++) {
             workerNodes[i].close();
         }
-
-        System.out.println("Wait for join");
         while(!executor.isTerminated());
-
-        System.out.println("End");
 
         stream.close();
         outputStream.close();
@@ -87,7 +77,6 @@ public class DictionaryApplier {
     }
 
     private synchronized void demandSave(String save) {
-        while(linesToSave.size() >= MAX_LOAD);
         linesToSave.add(save);
     }
 
@@ -145,7 +134,6 @@ public class DictionaryApplier {
         public void run() {
             // slave
             threadId = Thread.currentThread().getId();
-            System.out.println("Started worker " + threadId);
             do {
                 String line = null;
                 ArticleFromLine article = null;
@@ -153,16 +141,14 @@ public class DictionaryApplier {
 
                 if(!queue.isEmpty()) {
                     article = queue.poll();
-                    System.out.println("Passed from other worker to " + threadId);
                 }
 
                 if(article == null) {
                     line = parentNode.demandLastResource();
-                    if(line != null)
-                        System.out.println("Worker " + threadId + " got the line still in queue " + (parentNode.linesToTake.size() - 1));
                 }
 
                 if(article != null) {
+                    System.out.println("Got passed article");
                     for (i = 0; i < article.words.length; i++) {
                         String word = article.words[i];
                         if (word.startsWith("\\")) {
@@ -177,15 +163,18 @@ public class DictionaryApplier {
                     }
                     article.passes++;
                     if(article.passes == numNodes) {
-                        System.out.println("Finnished " + article.passes + " passes by worker " + threadId);
-                        System.out.println("Worker " + threadId + " demands to save line");
+                        System.out.println("Done article");
+                        while(parentNode.linesToSave.size() >= MAX_LOAD);
+                        System.out.println("Lock off");
                         demandSave(article.toString());
                     }
                     else {
                         passFurther(article);
+                        System.out.println("Pass already passed");
                     }
                 }
                 else if (line != null) {
+                    System.out.println("Took article");
                     String lineId = line.substring(0, line.indexOf('#'));
                     article = new ArticleFromLine();
                     article.articleId = lineId;
@@ -203,13 +192,10 @@ public class DictionaryApplier {
                         }
                     }
                     article.words = words;
-
-                    System.out.println("Pass from worker " + threadId + " to worker " + nextNode.threadId);
                     passFurther(article);
+                    System.out.println("Pass tooked");
                 }
-
-            } while(!finnish);
-            System.out.println("Worker " + threadId + " ends the job");
+            } while(!queue.isEmpty() || !finnish);
         }
 
         private void passFurther(ArticleFromLine article) {
