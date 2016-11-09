@@ -18,7 +18,7 @@ public class DictionaryApplier {
 
     public void applyDictionary(String fileName, String outputFileName, List<WordFeature>[] chunks, boolean simple) throws IOException, InterruptedException {
         int numCores = Runtime.getRuntime().availableProcessors();
-        int i, linesBalance = 0;
+        int i, linesBalance = 0, saved = 0;
 
         linesToTake = new ArrayBlockingQueue<String>(MAX_LOAD);
         linesToSave = new ArrayBlockingQueue<String>(MAX_LOAD);
@@ -36,7 +36,7 @@ public class DictionaryApplier {
 
 
         for(i = 0; i < numCores - 1; i++) {
-            workerNodes[i] = new DictionaryApplierNode(this, chunks[i], numCores - 1, simple);
+            workerNodes[i] = new DictionaryApplierNode(this, chunks[i], i, numCores - 1, simple);
         }
 
         for(i = 0; i < numCores - 1; i++) {
@@ -51,7 +51,7 @@ public class DictionaryApplier {
             if (!linesToSave.isEmpty()) {
                 outputStream.write(linesToSave.poll() + "\n");
                 linesBalance--;
-                System.out.println(linesBalance + ",sv " + linesToSave.size() + ",tk " + linesToTake.size());
+                System.out.print("\rSaved " + (++saved) + " articles");
             }
 
             if(line == null || linesToTake.size() >= MAX_LOAD) {
@@ -66,6 +66,8 @@ public class DictionaryApplier {
             }
         }while (!linesToSave.isEmpty() || !linesToTake.isEmpty() || linesBalance != 0);
 
+        System.out.println();
+
         for(i = 0; i < numCores - 1; i++) {
             workerNodes[i].close();
         }
@@ -77,14 +79,26 @@ public class DictionaryApplier {
     }
 
     private synchronized void demandSave(String save) {
-        linesToSave.add(save);
+        try {
+            linesToSave.put(save);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private synchronized boolean checkSaveLoad() {
+        return linesToSave.size() >= MAX_LOAD;
     }
 
     private synchronized String demandLastResource() {
         if(linesToTake.isEmpty()) {
             return null;
         }
-        return linesToTake.poll();
+        try {
+            return linesToTake.take();
+        } catch (InterruptedException e) {
+            return null;
+        }
     }
 
     public class ArticleFromLine {
@@ -111,15 +125,16 @@ public class DictionaryApplier {
         private List<WordFeature> chunk;
         private DictionaryApplierNode nextNode;
         private int numNodes;
-        private long threadId;
+        private int nodeId;
         private BlockingQueue<ArticleFromLine> queue;
 
-        public DictionaryApplierNode(DictionaryApplier parentNode, List<WordFeature> chunk, int numNodes, boolean simple) {
+        public DictionaryApplierNode(DictionaryApplier parentNode, List<WordFeature> chunk, int nodeId, int numNodes, boolean simple) {
             this.parentNode = parentNode;
             this.chunk = chunk;
+            this.nodeId = nodeId;
             this.numNodes = numNodes;
             this.simple = simple;
-            queue = new ArrayBlockingQueue<ArticleFromLine>(numNodes);
+            queue = new ArrayBlockingQueue<ArticleFromLine>(numNodes * 5);
         }
 
         public void setNextNode(DictionaryApplierNode nextNode) {
@@ -130,17 +145,22 @@ public class DictionaryApplier {
             finnish = true;
         }
 
+
         @Override
         public void run() {
+
             // slave
-            threadId = Thread.currentThread().getId();
             do {
                 String line = null;
                 ArticleFromLine article = null;
                 int i;
 
                 if(!queue.isEmpty()) {
-                    article = queue.poll();
+                    try {
+                        article = queue.take();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 if(article == null) {
@@ -148,7 +168,6 @@ public class DictionaryApplier {
                 }
 
                 if(article != null) {
-                    System.out.println("Got passed article");
                     for (i = 0; i < article.words.length; i++) {
                         String word = article.words[i];
                         if (word.startsWith("\\")) {
@@ -163,18 +182,14 @@ public class DictionaryApplier {
                     }
                     article.passes++;
                     if(article.passes == numNodes) {
-                        System.out.println("Done article");
-                        while(parentNode.linesToSave.size() >= MAX_LOAD);
-                        System.out.println("Lock off");
+                        while(checkSaveLoad());
                         demandSave(article.toString());
                     }
                     else {
                         passFurther(article);
-                        System.out.println("Pass already passed");
                     }
                 }
                 else if (line != null) {
-                    System.out.println("Took article");
                     String lineId = line.substring(0, line.indexOf('#'));
                     article = new ArticleFromLine();
                     article.articleId = lineId;
@@ -193,13 +208,16 @@ public class DictionaryApplier {
                     }
                     article.words = words;
                     passFurther(article);
-                    System.out.println("Pass tooked");
                 }
             } while(!queue.isEmpty() || !finnish);
         }
 
         private void passFurther(ArticleFromLine article) {
-            nextNode.queue.add(article);
+            try {
+                nextNode.queue.put(article);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 

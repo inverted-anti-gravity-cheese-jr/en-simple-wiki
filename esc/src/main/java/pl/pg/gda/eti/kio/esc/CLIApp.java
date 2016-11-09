@@ -12,11 +12,24 @@ import java.io.*;
 public class CLIApp {
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        long start, end;
+
         WordDictionaryMerger merger = new WordDictionaryMerger();
+        start = System.currentTimeMillis();
         merger.mergeFiles("simple/temp-po_slowach-feature_dict-simple-20120104", "en/en-po_slowach-feature_dict-en-20111201");
+        end = System.currentTimeMillis();
+        System.out.println("Reading dicts finnished, it took " + (end - start) + " ms");
 
         DictionaryApplier applier = new DictionaryApplier();
-        applier.applyDictionary("simple/temp-po_slowach-lista-simple-20120104-test", "temp-data/simple-applied", merger.getChunks(), true);
+        start = System.currentTimeMillis();
+        applier.applyDictionary("simple/temp-po_slowach-lista-simple-20120104", "temp-data/simple-applied", merger.getChunks(), true);
+        end = System.currentTimeMillis();
+        System.out.println("Appling dict to simple finnished, it took " + (end - start) + " ms");
+
+        start = System.currentTimeMillis();
+        applier.applyDictionary("en/en-po_slowach-lista-en-20111201", "temp-data/en-applied", merger.getChunks(), false);
+        end = System.currentTimeMillis();
+        System.out.println("Appling dict to en finnished, it took " + (end - start) + " ms");
 
     }
 }
