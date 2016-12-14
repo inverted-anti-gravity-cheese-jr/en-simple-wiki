@@ -29,10 +29,15 @@ public class CosineSimilarityCounter {
 	    System.out.print("Processed articles: " + count + ".");
 	    
 	    while ((enArticle = enStream.readLine()) != null) {
-		Tuple<Double, String> maxCos = findMaxCosineSimilarity(enArticle);
-		String articleId = enArticle.substring(0, enArticle.indexOf('#'));
-		outputStream.write(articleId + "#" + maxCos._2 + "=" + Double.toString(maxCos._1));
-		outputStream.newLine();
+		try {
+		    Tuple<Double, String> maxCos = findMaxCosineSimilarity(enArticle);
+		    String articleId = enArticle.substring(0, enArticle.indexOf('#'));
+		    outputStream.write(articleId + "#" + maxCos._2 + "=" + Double.toString(maxCos._1));
+		    outputStream.newLine();
+		}
+		catch (Exception e) {
+		    e.printStackTrace();
+		}
 		
 		count++;
 		System.out.print("\rProcessed articles: " + count + ".");
