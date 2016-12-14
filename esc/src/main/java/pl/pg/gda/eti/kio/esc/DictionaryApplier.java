@@ -1,224 +1,111 @@
 package pl.pg.gda.eti.kio.esc;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import pl.pg.gda.eti.kio.esc.data.WordFeature;
 
-import java.io.*;
-import java.util.List;
-import java.util.concurrent.*;
-
 /**
- * @author Wojciech Stanisławski
- * @since 08.11.2016
+ *
+ * @author wojtek
  */
 public class DictionaryApplier {
-    private static final int MAX_LOAD = 32;
 
-    private BlockingQueue<String> linesToTake;
-    private BlockingQueue<String> linesToSave;
+    private BufferedReader stream;
+    private BufferedWriter outputStream;
+    private List<WordFeature> dictionary;
 
-    public void applyDictionary(String fileName, String outputFileName, List<WordFeature>[] chunks, boolean simple) throws IOException, InterruptedException {
-        int numCores = Runtime.getRuntime().availableProcessors();
-        int i, linesBalance = 0, saved = 0;
+    public void applyDictionary(String fileName, String outputFileName, List<WordFeature> words, boolean simple) {
+	try {
+	    loadFiles(fileName, outputFileName);
+	    dictionary = words;
+	    
+	    int count = 0;
+	    System.out.print("Processed articles: " + count + ".");
 
-        linesToTake = new ArrayBlockingQueue<String>(MAX_LOAD);
-        linesToSave = new ArrayBlockingQueue<String>(MAX_LOAD);
+	    String line = null;
+	    while ((line = stream.readLine()) != null) {
+		String newLine = extractArticleData(line, simple).toString();
+		outputStream.write(newLine);
+		outputStream.newLine();
+		count++;
+		System.out.print("\rProcessed articles: " + count + ".");
+	    }
+	    System.out.println();
+	    System.out.println("Done");
 
-        // master
-
-        File file = new File(fileName);
-        BufferedReader stream = new BufferedReader(new FileReader(fileName));
-
-        File outputFile = new File(outputFileName);
-        BufferedWriter outputStream = new BufferedWriter(new FileWriter(outputFile));
-
-        DictionaryApplierNode[] workerNodes = new DictionaryApplierNode[numCores - 1];
-        ExecutorService executor = Executors.newFixedThreadPool(numCores - 1);
-
-
-        for(i = 0; i < numCores - 1; i++) {
-            workerNodes[i] = new DictionaryApplierNode(this, chunks[i], i, numCores - 1, simple);
-        }
-
-        for(i = 0; i < numCores - 1; i++) {
-            workerNodes[i].setNextNode(workerNodes[(i + 1) % (numCores - 1)]);
-            executor.submit(workerNodes[i]);
-        }
-        executor.shutdown();
-
-        String line = "";
-
-        do {
-            if (!linesToSave.isEmpty()) {
-                outputStream.write(linesToSave.poll() + "\n");
-                linesBalance--;
-                System.out.print("\rSaved " + (++saved) + " articles");
-            }
-
-            if(line == null || linesToTake.size() >= MAX_LOAD) {
-                continue;
-            }
-
-            line = stream.readLine();
-
-            if(line != null) {
-                linesToTake.add(line);
-                linesBalance++;
-            }
-        }while (!linesToSave.isEmpty() || !linesToTake.isEmpty() || linesBalance != 0);
-
-        System.out.println();
-
-        for(i = 0; i < numCores - 1; i++) {
-            workerNodes[i].close();
-        }
-        while(!executor.isTerminated());
-
-        stream.close();
-        outputStream.close();
-
+	    freeFiles();
+	} catch (Exception ex) {
+	    Logger.getLogger(DictionaryApplier.class.getName()).log(Level.SEVERE, null, ex);
+	}
     }
 
-    private synchronized void demandSave(String save) {
-        try {
-            linesToSave.put(save);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    private ArticleData extractArticleData(String line, boolean simple) {
+	String lineId = line.substring(0, line.indexOf('#'));
+	String[] words = line.substring(line.indexOf('#') + 1).split(" ");
+
+	ArticleData data = new ArticleData();
+	data.lineId = lineId;
+
+	for (int i = 0; i < words.length; i++) {
+	    String word = words[i];
+	    if(!word.contains("-")) {
+		continue;
+	    }
+	    
+	    String wordId = word.substring(0, word.indexOf('-'));
+
+	    
+	    for (WordFeature feature : dictionary) {
+		if ((simple && wordId.equals(feature.getSimpleId())) || (!simple && wordId.equals(feature.getEnId()) )) {
+		    words[i] = "\\" + feature.getWord() + word.substring(word.indexOf('-')) + " ";
+		}
+	    }
+	    
+	}
+
+	data.words = words;
+	return data;
     }
 
-    private synchronized boolean checkSaveLoad() {
-        return linesToSave.size() >= MAX_LOAD;
+    private void loadFiles(String fileName, String outputFileName) throws IOException {
+	File file = new File(fileName);
+	stream = new BufferedReader(new FileReader(file));
+
+	File outputFile = new File(outputFileName);
+	outputStream = new BufferedWriter(new FileWriter(outputFile));
     }
 
-    private synchronized String demandLastResource() {
-        if(linesToTake.isEmpty()) {
-            return null;
-        }
-        try {
-            return linesToTake.take();
-        } catch (InterruptedException e) {
-            return null;
-        }
+    private void freeFiles() throws IOException {
+	stream.close();
+	outputStream.close();
     }
 
-    public class ArticleFromLine {
-        public int passes;
-        public String articleId;
-        public String[] words;
+    private class ArticleData {
 
-        @Override
-        public String toString() {
-            String line = articleId + "#";
-            for(String word : words) {
-                if(word.startsWith("\\")) {
-                    line += word.substring(1) + " ";
-                }
-            }
-            return line.trim();
-        }
-    }
+	public String lineId;
+	public String[] words;
 
-    public class DictionaryApplierNode implements Runnable {
-        private final boolean simple;
-        private DictionaryApplier parentNode;
-        private boolean finnish;
-        private List<WordFeature> chunk;
-        private DictionaryApplierNode nextNode;
-        private int numNodes;
-        private int nodeId;
-        private BlockingQueue<ArticleFromLine> queue;
-
-        public DictionaryApplierNode(DictionaryApplier parentNode, List<WordFeature> chunk, int nodeId, int numNodes, boolean simple) {
-            this.parentNode = parentNode;
-            this.chunk = chunk;
-            this.nodeId = nodeId;
-            this.numNodes = numNodes;
-            this.simple = simple;
-            queue = new ArrayBlockingQueue<ArticleFromLine>(numNodes * 5);
-        }
-
-        public void setNextNode(DictionaryApplierNode nextNode) {
-            this.nextNode = nextNode;
-        }
-
-        public void close() {
-            finnish = true;
-        }
-
-
-        @Override
-        public void run() {
-
-            // slave
-            do {
-                String line = null;
-                ArticleFromLine article = null;
-                int i;
-
-                if(!queue.isEmpty()) {
-                    try {
-                        article = queue.take();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                if(article == null) {
-                    line = parentNode.demandLastResource();
-                }
-
-                if(article != null) {
-                    for (i = 0; i < article.words.length; i++) {
-                        String word = article.words[i];
-                        if (word.startsWith("\\")) {
-                            continue;
-                        }
-                        String wordId = word.substring(0, word.indexOf('-'));
-                        for (WordFeature feature : chunk) {
-                            if ((simple && feature.getSimpleId().equals(wordId)) || (!simple && feature.getEnId().equals(wordId))) {
-                                article.words[i] = "\\" + feature.getWord() + word.substring(word.indexOf('-'));
-                            }
-                        }
-                    }
-                    article.passes++;
-                    if(article.passes == numNodes) {
-                        while(checkSaveLoad());
-                        demandSave(article.toString());
-                    }
-                    else {
-                        passFurther(article);
-                    }
-                }
-                else if (line != null) {
-                    String lineId = line.substring(0, line.indexOf('#'));
-                    article = new ArticleFromLine();
-                    article.articleId = lineId;
-                    article.passes = 1;
-
-                    String[] words = line.substring(line.indexOf('#') + 1).split(" ");
-
-                    for (i = 0; i < words.length; i++) {
-                        String word = words[i];
-                        String wordId = word.substring(0, word.indexOf('-'));
-                        for (WordFeature feature : chunk) {
-                            if ((simple && feature.getSimpleId().equals(wordId)) || (!simple && feature.getEnId().equals(wordId))) {
-                                words[i] = "\\" + feature.getWord() + word.substring(word.indexOf('-')) + " ";
-                            }
-                        }
-                    }
-                    article.words = words;
-                    passFurther(article);
-                }
-            } while(!queue.isEmpty() || !finnish);
-        }
-
-        private void passFurther(ArticleFromLine article) {
-            try {
-                nextNode.queue.put(article);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+	@Override
+	public String toString() {
+	    StringBuilder builder = new StringBuilder();
+	    builder.append(lineId);
+	    builder.append("#");
+	    for (String word : words) {
+		if (word.startsWith("\\")) {
+		    builder.append(word.substring(1));
+		    builder.append(" ");
+		}
+	    }
+	    return builder.toString().trim();
+	}
     }
 
 }

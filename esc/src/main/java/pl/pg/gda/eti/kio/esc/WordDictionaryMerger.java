@@ -3,8 +3,6 @@ package pl.pg.gda.eti.kio.esc;
 import pl.pg.gda.eti.kio.esc.data.WordFeature;
 
 import java.io.*;
-import java.nio.Buffer;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -20,8 +18,8 @@ public class WordDictionaryMerger {
         return chunks;
     }
 
-    public void mergeFiles(String simpleFileName, String enFileName) {
-        int i = 0, numChunks = Runtime.getRuntime().availableProcessors() - 1;
+    public void mergeFiles(String simpleFileName, String enFileName, int numChunks) {
+        int i = 0;
         int lineNum = 0;
         chunks = new List[numChunks];
         for(; i < numChunks; i++) {
