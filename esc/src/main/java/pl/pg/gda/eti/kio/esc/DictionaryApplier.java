@@ -3,7 +3,6 @@ package pl.pg.gda.eti.kio.esc;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -90,8 +89,8 @@ public class DictionaryApplier {
 
     private class ArticleData {
 
-	public String lineId;
-	public String[] words;
+	private String lineId;
+	private String[] words;
 
 	@Override
 	public String toString() {
