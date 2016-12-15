@@ -2,7 +2,9 @@ package pl.pg.gda.eti.kio.esc;
 
 
 import java.io.*;
-
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 /**
  * @author Wojciech Stanisławski
  * @since 08.11.2016
@@ -53,10 +55,24 @@ public class CLIApp {
 		System.out.println("Appling dict to en finnished, it took " + (end - start) + " ms");
 	    }
 	}
-	CosineSimilarityCounter counter = new CosineSimilarityCounter();
-	start = System.currentTimeMillis();
-	counter.countSimilarityForAll("temp-data/en-applied", "temp-data/simple-applied", "temp-data/cosine-similarity");
-	end = System.currentTimeMillis();
-	System.out.println("Counting cosine finnished, it took " + (end - start) + " ms");
+	if (Files.notExists(FileSystems.getDefault().getPath("temp-data/cosine-similarity"))) {
+		CosineSimilarityCounter counter = new CosineSimilarityCounter();
+		start = System.currentTimeMillis();
+		counter.countSimilarityForAll("temp-data/en-applied", "temp-data/simple-applied", "temp-data/cosine-similarity");
+		end = System.currentTimeMillis();
+		System.out.println("Counting cosine finnished, it took " + (end - start) + " ms");
+	}
+	ResultParser resultParser = new ResultParser();
+	resultParser.parseResultFile("temp-data/cosine-similarity", "en/en-po_slowach-articles_dict-en-20111201", "simple/temp-po_slowach-categories-simple-20120104", "simple/temp-po_slowach-cats_dict-simple-20120104", "temp-data/result");
+//	wczytać ten plik cosine-similarity i go przetworzyć
+//	struktura pliku: <artykuł w en>#<artykuł w simple>=<wynik cosinusowy>
+//	wynik cosinusowy to maksymalny wynik cosinusowy
+//	co jeszcze trzeba zrobić: wyznaczyć nazwę artykułu w EN i kategorię z SIMPLE dla niego
+//	i wypisać do jakiegośtam pliku w stylu temp-data/result
+	
+//plik zawierający id artykułu i jego nazwę en-po_slowach-articles_dict-en-20111201
+//plik zawierajacy id artykulu i id kategorii do niego przypisanych temp-po_slowach-categories-simple-20120104
+//plik zawierajacy nazwe kategorii i jej id temp-po_slowach-cats_dict-simple-20120104
+	//load english articles read his name
     }
 }
