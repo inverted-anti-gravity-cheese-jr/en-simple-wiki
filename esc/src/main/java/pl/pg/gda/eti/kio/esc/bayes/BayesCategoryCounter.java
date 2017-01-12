@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Krzysztof Świeczkowski
@@ -21,17 +22,17 @@ public class BayesCategoryCounter {
 		while ((line = stream.readLine()) != null) {
 			String[] elements = line.split("\t");
 			String articleId = elements[0]; //rest of the ids are for the categories
-			for(int i = 0; i < elements.length; i++) {
+			for(int i = 1; i < elements.length; i++) {
 				//check if exists
 				
 				if(categoryStatistics.articlesInCategoriesCount.containsKey(elements[i])) {
 					//if exists
-					categoryStatistics.articlesInCategoriesCount.put(Integer.parseInt(elements[i]), 
+					categoryStatistics.articlesInCategoriesCount.put(elements[i], 
 						categoryStatistics.articlesInCategoriesCount.get(elements[i])+1);
 				}
 				else {
 					//if not exists
-					categoryStatistics.articlesInCategoriesCount.put(Integer.parseInt(elements[i]), 1);
+					categoryStatistics.articlesInCategoriesCount.put(elements[i], 1);
 				}
 			}
 			categoryStatistics.articlesCount++;
@@ -41,11 +42,12 @@ public class BayesCategoryCounter {
 	}
 
 	public class CategoryStatistics {
-		public HashMap<Integer, Integer> articlesInCategoriesCount; //key = id kategorii, value = ilosc artykulow
+		public Map<String, Integer> articlesInCategoriesCount; //key = id kategorii, value = ilosc artykulow
 		public Integer articlesCount;
 		
 		public CategoryStatistics() {
-			articlesInCategoriesCount = new HashMap<Integer, Integer>(); 
+			articlesInCategoriesCount = new HashMap<String, Integer>();
+			articlesCount = 0;
 		}
 	}
 
