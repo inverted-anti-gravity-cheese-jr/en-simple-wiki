@@ -1,10 +1,12 @@
 package pl.pg.gda.eti.kio.esc.data;
 
+import java.util.Comparator;
+
 /**
  * @author Wojciech Stanisławski
  * @since 08.11.2016
  */
-public class WordFeature {
+public class WordFeature implements Comparable<WordFeature> {
     private String word;
     private String simpleId;
     private String enId;
@@ -42,5 +44,10 @@ public class WordFeature {
 
     public void setEnId(String enId) {
         this.enId = enId;
+    }
+
+    @Override
+    public int compareTo(WordFeature o) {
+        return this.word.compareTo(o.word);
     }
 }

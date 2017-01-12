@@ -64,15 +64,5 @@ public class CLIApp {
 	}
 	ResultParser resultParser = new ResultParser();
 	resultParser.parseResultFile("temp-data/cosine-similarity", "en/en-po_slowach-articles_dict-en-20111201", "simple/temp-po_slowach-categories-simple-20120104", "simple/temp-po_slowach-cats_dict-simple-20120104", "temp-data/result");
-//	wczytać ten plik cosine-similarity i go przetworzyć
-//	struktura pliku: <artykuł w en>#<artykuł w simple>=<wynik cosinusowy>
-//	wynik cosinusowy to maksymalny wynik cosinusowy
-//	co jeszcze trzeba zrobić: wyznaczyć nazwę artykułu w EN i kategorię z SIMPLE dla niego
-//	i wypisać do jakiegośtam pliku w stylu temp-data/result
-	
-//plik zawierający id artykułu i jego nazwę en-po_slowach-articles_dict-en-20111201
-//plik zawierajacy id artykulu i id kategorii do niego przypisanych temp-po_slowach-categories-simple-20120104
-//plik zawierajacy nazwe kategorii i jej id temp-po_slowach-cats_dict-simple-20120104
-	//load english articles read his name
     }
 }
