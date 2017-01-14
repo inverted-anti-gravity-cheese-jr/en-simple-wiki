@@ -1,6 +1,7 @@
 package pl.pg.gda.eti.kio.esc.bayes;
 
 import pl.pg.gda.eti.kio.esc.WordDictionaryMerger;
+import pl.pg.gda.eti.kio.esc.bayes.BayesConditionalProbability.ConditionalProbabilityForClass;
 import pl.pg.gda.eti.kio.esc.data.WordFeature;
 
 import java.io.BufferedReader;
@@ -31,14 +32,19 @@ public class BayesClassifier {
 		BayesWordInCategoryCounter bayesWordInCategoryCounter = new BayesWordInCategoryCounter();
 		Map<String, BayesWordInCategoryCounter.WordsInCategory> stringWordsInCategoryMap = bayesWordInCategoryCounter.countWordsInCategories("simple/temp-po_slowach-categories-simple-20120104", "simple/temp-po_slowach-lista-simple-20120104", merger.getChunks()[0]);
 			
-		//artykuly do przypasowania	
-		WordDictionaryMerger wordDictionaryMerger = new WordDictionaryMerger();
-		wordDictionaryMerger.mergeFiles("simple/temp-po_slowach-feature_dict-simple-20120104", "en/en-po_slowach-feature_dict-en-20111201", 1);
-		List<WordFeature> mergedDictionary = wordDictionaryMerger.getChunks()[0];
+		BayesConditionalProbability bayesConditionalProbability = new BayesConditionalProbability();
+		Map<String, BayesConditionalProbability.ConditionalProbabilityForClass> conditionalProbability = bayesConditionalProbability.countConditionalProbability(stringWordsInCategoryMap, wordsInDictionary);
 		
-		//estymaty prawdopodobienstw warunkowych
-			
-		//Ładowanie pliku		
+		//artykuly do przypasowania	
+		//WordDictionaryMerger wordDictionaryMerger = new WordDictionaryMerger();
+		//wordDictionaryMerger.mergeFiles("simple/temp-po_slowach-feature_dict-simple-20120104", "en/en-po_slowach-feature_dict-en-20111201", 1);
+		//List<WordFeature> mergedDictionary = wordDictionaryMerger.getChunks()[0];
+	}
+}
+
+
+/*
+//Ładowanie pliku		
 		File file = new File("en/en-po_slowach-lista-en-20111201");
 		BufferedReader stream = new BufferedReader(new FileReader(file));
 		String line;
@@ -58,21 +64,6 @@ public class BayesClassifier {
 					}
 			    }
 			}
-			//foreach class in simple wiki
-			for (Map.Entry<String, BayesWordInCategoryCounter.WordsInCategory> entry : stringWordsInCategoryMap.entrySet()) {
-				String key = entry.getKey();
-				BayesWordInCategoryCounter.WordsInCategory value = entry.getValue();
-				//foreach word in article
-				for(WordFeature wordFeature : wordFeaturesInArticle) {
-					if(value.wordCountInThisCategory.get(wordFeature) != null) {
-						//liczba wystąpień słowa w dokumentach klasy + 1/liczba słów w klasie + rozmiar słownika
-						double estymatPrawdopodobienstwaWarunkowego = (double)(value.wordCountInThisCategory.get(wordFeature) + 1) / (value.sumWordCountInThisCategory + wordsInDictionary);
-						System.out.println(estymatPrawdopodobienstwaWarunkowego);
-					}
-				}
-			}
 		}
 		stream.close();
-		
-	}
-}
+*/
