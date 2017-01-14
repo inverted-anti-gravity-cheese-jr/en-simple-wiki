@@ -76,7 +76,6 @@ public class BayesClassifier {
 				}
 				System.out.println(bayesClassification);
 			}
-			return;
 		}
 		stream.close();
 	}
