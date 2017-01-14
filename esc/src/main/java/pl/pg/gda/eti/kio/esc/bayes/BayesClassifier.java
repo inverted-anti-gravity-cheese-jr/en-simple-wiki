@@ -65,7 +65,6 @@ public class BayesClassifier {
 				//foreach word in article
 				for(WordFeature wordFeature : wordFeaturesInArticle) {
 					if(value.wordCountInThisCategory.get(wordFeature) != null) {
-						//System.out.println(value.wordCountInThisCategory.get(wordFeature));
 						//liczba wystąpień słowa w dokumentach klasy + 1/liczba słów w klasie + rozmiar słownika
 						double estymatPrawdopodobienstwaWarunkowego = (double)(value.wordCountInThisCategory.get(wordFeature) + 1) / (value.sumWordCountInThisCategory + wordsInDictionary);
 						System.out.println(estymatPrawdopodobienstwaWarunkowego);
