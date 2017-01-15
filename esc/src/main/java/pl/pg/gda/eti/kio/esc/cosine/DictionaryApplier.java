@@ -1,4 +1,4 @@
-package pl.pg.gda.eti.kio.esc;
+package pl.pg.gda.eti.kio.esc.cosine;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

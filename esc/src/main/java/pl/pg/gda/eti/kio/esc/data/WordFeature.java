@@ -47,6 +47,17 @@ public class WordFeature implements Comparable<WordFeature> {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        try {
+            WordFeature feature = (WordFeature) obj;
+            return word.equals(feature.word);
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
     public int compareTo(WordFeature o) {
         return this.word.compareTo(o.word);
     }

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author Krzysiek
@@ -24,15 +23,14 @@ public class ResultParser {
     private BufferedWriter translatedResultWriter;
 	
     private Dictionary<String, String> articleDictionary;
-    private Dictionary<String, String> categoryDictionary;
     private Dictionary<String, List<String>> articleCategoryRelationListDictionary;
     
 	public void parseResultFile(String cosineSimilarityFile, String articleDictionaryFile, String articleCategoryRelationFile, String categoryDictionaryFile, String outputFile) {
 		try {
 			loadFiles(cosineSimilarityFile, articleDictionaryFile, articleCategoryRelationFile, categoryDictionaryFile, outputFile);
+			DictionaryUtil.categoryFinderInit(categoryDictionaryFile);
 			String resultForArticle;
 			articleDictionary = createDictionary(articleDictionaryReader);
-			categoryDictionary = createDictionary(categoryDictionaryReader);
 			articleCategoryRelationListDictionary = createRelationListDictionary(articleCategoryRelationReader);
 			
 			while ((resultForArticle = cosineSimilarityReader.readLine()) != null) {
@@ -56,7 +54,7 @@ public class ResultParser {
 		List<String> categoryIds = articleCategoryRelationListDictionary.get(id);
 		String categoriesString = ""; 
 		for(String categoryId : categoryIds) {
-			categoriesString = categoryDictionary.get(categoryId) + " ";
+			categoriesString = DictionaryUtil.findCategoryName(categoryId) + " ";//categoryDictionary.get(categoryId) + " ";
 		}
 		categoriesString = categoriesString.substring(0,categoriesString.length()-1);
 		return categoriesString;

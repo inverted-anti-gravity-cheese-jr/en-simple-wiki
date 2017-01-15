@@ -1,8 +1,11 @@
 package pl.pg.gda.eti.kio.esc.bayes;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import pl.pg.gda.eti.kio.esc.TestingPurpouses;
+import pl.pg.gda.eti.kio.esc.data.Tuple;
 import pl.pg.gda.eti.kio.esc.data.WordFeature;
 
 /**
@@ -11,7 +14,7 @@ import pl.pg.gda.eti.kio.esc.data.WordFeature;
  */
 
 public class BayesConditionalProbability {
-	public Map<String, ConditionalProbabilityForClass> countConditionalProbability(Map<String, BayesWordInCategoryCounter.WordsInCategory> stringWordsInCategoryMap, int wordsInDictionary) {
+	public Map<String, ConditionalProbabilityForClass> countConditionalProbability(Map<String, BayesWordInCategoryCounter.WordsInCategory> stringWordsInCategoryMap, List<WordFeature> words, int wordsInDictionary) {
 		//estymaty prawdopodobienstw warunkowych dla wszystkich słów
 		Map<String, ConditionalProbabilityForClass> conditionalProbability = new HashMap<String, ConditionalProbabilityForClass>();
 		//foreach class in simple wiki
@@ -20,11 +23,18 @@ public class BayesConditionalProbability {
 			BayesWordInCategoryCounter.WordsInCategory wordsInCategory = entry.getValue();
 			ConditionalProbabilityForClass conditionalProbabilityForClass = new ConditionalProbabilityForClass(categoryId);
 			//foreach word
-			for (Map.Entry<WordFeature, Integer> wordData : wordsInCategory.wordCountInThisCategory.entrySet()) {
-				//liczba wystąpień słowa w dokumentach klasy + 1/liczba słów w klasie + rozmiar słownika
-				Double estymatPrawdopodobienstwaWarunkowego = (double)(wordData.getValue() + 1) / (double)(wordsInCategory.sumWordCountInThisCategory + wordsInDictionary);
-				conditionalProbabilityForClass.conditionalProbabilityForWordInClass.put(wordData.getKey(), estymatPrawdopodobienstwaWarunkowego);
+			for(WordFeature word: words) {
+				int occurances = 0;
+				if(wordsInCategory.wordCountInThisCategory.containsKey(word)) {
+					occurances = wordsInCategory.wordCountInThisCategory.get(word);
+				}
+				Double estymatPrawdopodobienstwaWarunkowego = (double)(occurances + 1) / (double)(wordsInCategory.sumWordCountInThisCategory + wordsInDictionary);
+				if(TestingPurpouses.DEBUG) {
+					System.out.println("p(" + word.getWord() + "/" + categoryId + ")" + " = (" + occurances + " + 1) / (" + wordsInCategory.sumWordCountInThisCategory + " + " + wordsInDictionary + ") = " + estymatPrawdopodobienstwaWarunkowego);
+				}
+				conditionalProbabilityForClass.conditionalProbabilityForWordInClass.put(word, estymatPrawdopodobienstwaWarunkowego);
 			}
+
 			conditionalProbability.put(categoryId, conditionalProbabilityForClass);
 		}
 		return conditionalProbability;
