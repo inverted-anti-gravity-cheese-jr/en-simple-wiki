@@ -18,7 +18,7 @@ public class TimeCounter {
 	public long diffMs() {
 		return en - st;
 	}
-
+	
 	public void printMessage(String task) {
 		System.out.println("Performing task \"" + task + "\" took " + diffMs() + " ms.");
 	}

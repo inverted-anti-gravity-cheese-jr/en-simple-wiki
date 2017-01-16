@@ -13,7 +13,12 @@ import java.util.StringTokenizer;
  */
 public class WordDictionaryMerger {
     private List<WordFeature>[] chunks;
-
+    private String comparatorForWordFeature = "word";
+    
+    public void setComparatorForWordFeature(String comparatorForWordFeature) {
+    	this.comparatorForWordFeature = comparatorForWordFeature;
+    }
+    
     public List<WordFeature>[] getChunks() {
         return chunks;
     }
@@ -34,7 +39,7 @@ public class WordDictionaryMerger {
                     StringTokenizer tokenizer = new StringTokenizer(line, "\t");
                     String word = tokenizer.nextToken();
                     String id = tokenizer.nextToken();
-                    chunks[lineNum % numChunks].add(new WordFeature(word, id, null));
+                    chunks[lineNum % numChunks].add(new WordFeature(word, id, null, comparatorForWordFeature));
                 }
                 lineNum++;
             } while(line != null);

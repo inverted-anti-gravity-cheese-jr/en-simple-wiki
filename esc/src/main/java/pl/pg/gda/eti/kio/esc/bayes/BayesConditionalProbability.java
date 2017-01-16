@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import pl.pg.gda.eti.kio.esc.TestingPurpouses;
+import pl.pg.gda.eti.kio.esc.TestingPurposes;
 import pl.pg.gda.eti.kio.esc.data.Tuple;
 import pl.pg.gda.eti.kio.esc.data.WordFeature;
 
@@ -29,7 +29,7 @@ public class BayesConditionalProbability {
 					occurances = wordsInCategory.wordCountInThisCategory.get(word);
 				}
 				Double estymatPrawdopodobienstwaWarunkowego = (double)(occurances + 1) / (double)(wordsInCategory.sumWordCountInThisCategory + wordsInDictionary);
-				if(TestingPurpouses.DEBUG) {
+				if(TestingPurposes.DEBUG) {
 					System.out.println("p(" + word.getWord() + "/" + categoryId + ")" + " = (" + occurances + " + 1) / (" + wordsInCategory.sumWordCountInThisCategory + " + " + wordsInDictionary + ") = " + estymatPrawdopodobienstwaWarunkowego);
 				}
 				conditionalProbabilityForClass.conditionalProbabilityForWordInClass.put(word, estymatPrawdopodobienstwaWarunkowego);

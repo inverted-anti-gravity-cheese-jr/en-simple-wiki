@@ -10,6 +10,6 @@ import java.util.Map;
  * @author Wojciech Stanisławski
  * @since 12.01.17
  */
-public class TestingPurpouses {
+public class TestingPurposes {
 	public static final boolean DEBUG = false;
 }

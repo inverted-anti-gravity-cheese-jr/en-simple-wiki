@@ -10,11 +10,20 @@ public class WordFeature implements Comparable<WordFeature> {
     private String word;
     private String simpleId;
     private String enId;
+    private String comparableBy;
 
     public WordFeature(String word, String simpleId, String enId) {
         this.word = word;
         this.simpleId = simpleId;
         this.enId = enId;
+        this.comparableBy = "word";
+    }
+    
+    public WordFeature(String word, String simpleId, String enId, String comparableBy) {
+        this.word = word;
+        this.simpleId = simpleId;
+        this.enId = enId;
+        this.comparableBy = comparableBy;
     }
 
     @Override
@@ -49,8 +58,16 @@ public class WordFeature implements Comparable<WordFeature> {
     @Override
     public boolean equals(Object obj) {
         try {
-            WordFeature feature = (WordFeature) obj;
-            return word.equals(feature.word);
+        	WordFeature feature = (WordFeature) obj;
+        	if(this.comparableBy == "enId") {
+        		return enId.equals(feature.enId);
+        	}
+        	else if(this.comparableBy == "simpleId") {
+	            return simpleId.equals(feature.simpleId);
+        	}
+        	else {
+        		return word.equals(feature.word);
+        	}
         }
         catch (Exception e) {
             return false;
@@ -59,6 +76,14 @@ public class WordFeature implements Comparable<WordFeature> {
 
     @Override
     public int compareTo(WordFeature o) {
-        return this.word.compareTo(o.word);
+    	if(this.comparableBy == "enId") {
+    		return this.enId.compareTo(o.enId);
+    	}
+    	else if(this.comparableBy == "simpleId") {
+    		return this.simpleId.compareTo(o.simpleId);
+    	}
+    	else {
+    		return this.word.compareTo(o.word);
+    	}
     }
 }

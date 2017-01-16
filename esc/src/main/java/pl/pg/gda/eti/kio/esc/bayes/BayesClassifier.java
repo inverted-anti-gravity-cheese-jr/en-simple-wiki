@@ -1,7 +1,7 @@
 package pl.pg.gda.eti.kio.esc.bayes;
 
 import pl.pg.gda.eti.kio.esc.DictionaryUtil;
-import pl.pg.gda.eti.kio.esc.TestingPurpouses;
+import pl.pg.gda.eti.kio.esc.TestingPurposes;
 import pl.pg.gda.eti.kio.esc.TimeCounter;
 import pl.pg.gda.eti.kio.esc.WordDictionaryMerger;
 import pl.pg.gda.eti.kio.esc.bayes.BayesConditionalProbability.ConditionalProbabilityForClass;
@@ -29,6 +29,7 @@ public class BayesClassifier {
 
 	public static void classify(BayesClassificationSettings settings) throws IOException {
 		TimeCounter time = new TimeCounter();
+		TimeCounter helperTime = new TimeCounter();
 		Map<String, String> predictedCategoriesMap = new TreeMap<>();
 
 		DictionaryUtil.articleFinderInit(settings.enArticleDict);
@@ -66,15 +67,24 @@ public class BayesClassifier {
 		time.printMessage("Calculating word in class probabilities");
 
 		//artykuly do przypasowania	
+		merger.setComparatorForWordFeature("enId");
 		List<WordFeature> mergedDictionary = merger.getChunks()[0];
+		merger.setComparatorForWordFeature("word");
 		
 		//Ładowanie pliku
-		time.start();
 		File file = new File(settings.enWordArticleDict);
+		int currentLineCounter = 0;
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		int totalLines = 0;
+		while (reader.readLine() != null) totalLines++;
+		reader.close();
+//		time.start();
 		BufferedReader stream = new BufferedReader(new FileReader(file));
 		String line;
 		//foreach article
+		time.start();
 		while ((line = stream.readLine()) != null) {
+			helperTime.start();
 			//geting article id
 			String[] elements = line.split("#");
 			if(elements.length < 2) {
@@ -84,25 +94,30 @@ public class BayesClassifier {
 			//getting words in article
 			List<WordFeature> wordFeaturesInArticle = new ArrayList<WordFeature>();
 			String[] words = elements[1].split(" ");
+			helperTime.end();
+			Long initTime = helperTime.diffMs();
+			helperTime.start();
 			//foreach word get wordFeatures
 			for(int  i=0; i < words.length; i++) {
 				String wordId = words[i].split("-")[0];
-				for (WordFeature feature : mergedDictionary) {
-					if (wordId.equals(feature.getEnId())) {
-						wordFeaturesInArticle.add(feature);
-					}
-			    }
+				WordFeature tempWordFeature = new WordFeature("","",wordId,"enId");
+				int index = mergedDictionary.indexOf(tempWordFeature);
+				if(index != -1) {
+					wordFeaturesInArticle.add(
+							mergedDictionary.get(index));
+				}
 			}
-
+			helperTime.end();
+			Long wordFeatures = helperTime.diffMs();
+			helperTime.start();
 			BayesClassificationResultMap bayesClassificationForArticle = new BayesClassificationResultMap();
 			Map.Entry<String, Double> predictedValue = null;
-
 			//foreach class check if wordfeature exists and count probability
 			for (Map.Entry<String, BayesConditionalProbability.ConditionalProbabilityForClass>
 					conditionalProbabilityForClass : conditionalProbability.entrySet()) {
 				Double bayesClassification = (double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount;
 
-				if(TestingPurpouses.DEBUG) {
+				if(TestingPurposes.DEBUG) {
 					System.out.println("p(" + conditionalProbabilityForClass.getKey() + ")" + " = " + categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) + " / " + categoryStatistics.articlesCount + " = " + bayesClassification);
 				}
 
@@ -113,27 +128,43 @@ public class BayesClassifier {
 					}
 				}
 
-				if(TestingPurpouses.DEBUG) {
+				if(TestingPurposes.DEBUG) {
 					System.out.println("p = " + bayesClassification);
 				}
 				bayesClassificationForArticle.put(conditionalProbabilityForClass.getKey(), bayesClassification);
 			}
-
+			helperTime.end();
+			Long probabilityForWordFeatures = helperTime.diffMs();
+			helperTime.start();
 			// get best prediction
 			for(Map.Entry<String, Double> catPrediction: bayesClassificationForArticle.entrySet()) {
 				if(predictedValue == null || catPrediction.getValue() > predictedValue.getValue()) {
 					predictedValue = catPrediction;
 				}
 			}
-
 			String articleName = DictionaryUtil.findArticleName(articleId);
 			String categoryName = DictionaryUtil.findCategoryName(predictedValue.getKey());
 			predictedCategoriesMap.put(articleName, categoryName);
+			currentLineCounter++;
+			helperTime.end();
+			Long bestPrediction = helperTime.diffMs();
+			if(currentLineCounter % 1000 == 0) {
+			System.out.println("Predicting class"
+					+ " Init time: " + initTime
+					+ " WordFeatures: " + wordFeatures
+					+ " Probability for WordFeatures: " + probabilityForWordFeatures
+					+ " Best prediction: " + bestPrediction
+					+ " "+ currentLineCounter + "/" + totalLines);
+			time.end();
+			time.printMessage("Predicting 1000 classes");
+			time.start();
+			}
 		}
+		time.end();
 		stream.close();
 
-		time.end();
-		time.printMessage("Predicting classes");
+//		time.end();
+//		time.printMessage("Predicting classes");
 
 		time.start();
 		DictionaryUtil.saveDictionary(settings.outputFile, predictedCategoriesMap);
