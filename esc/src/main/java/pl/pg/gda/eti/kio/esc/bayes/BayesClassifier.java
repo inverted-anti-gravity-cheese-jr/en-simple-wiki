@@ -130,9 +130,9 @@ public class BayesClassifier {
 			String categoryName = DictionaryUtil.findCategoryName(predictedValue.getKey());
 			predictedCategoriesMap.put(articleName, categoryName);
 			currentLineCounter++;
-			if(currentLineCounter % 1000 == 0) {
+			if(currentLineCounter % 2000 == 0) {
 			time.end();
-			time.printMessage("Predicting 1000 classes");
+			time.printMessage("Predicting 2000 classes. " + currentLineCounter + "/" + totalLines);
 			time.start();
 			}
 		}
