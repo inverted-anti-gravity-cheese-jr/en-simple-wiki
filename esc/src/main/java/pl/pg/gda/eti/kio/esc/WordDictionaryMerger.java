@@ -4,7 +4,9 @@ import pl.pg.gda.eti.kio.esc.data.WordFeature;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 /**
@@ -23,6 +25,17 @@ public class WordDictionaryMerger {
         return chunks;
     }
 
+    public Map<String, WordFeature>[] getChunksAsMapsWithKeyEnId() {
+    	Map<String,WordFeature>[] maps = new HashMap[chunks.length];
+    	int count = 0;
+    	for(List<WordFeature> chunk : chunks) {
+    		maps[count] = new HashMap<String,WordFeature>();
+    		for (WordFeature i : chunk) maps[count].put(i.getEnId(),i);
+    		count++;
+    	}
+    	return maps;
+    }
+    
     public void mergeFiles(String simpleFileName, String enFileName, int numChunks) {
         int i = 0;
         int lineNum = 0;
