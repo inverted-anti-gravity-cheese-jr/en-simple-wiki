@@ -5,7 +5,7 @@ import pl.pg.gda.eti.kio.esc.bayes.BayesClassificationSettings;
 import pl.pg.gda.eti.kio.esc.bayes.BayesClassifier;
 import pl.pg.gda.eti.kio.esc.cosine.*;
 import pl.pg.gda.eti.kio.esc.evaluation.ClassifierEvaluation;
-import pl.pg.gda.eti.kio.esc.evaluation.EvaluationSettings;
+import pl.pg.gda.eti.kio.esc.evaluation.ClassifierEvaluationSettings;
 
 import java.io.*;
 import java.nio.file.FileSystems;
@@ -36,14 +36,16 @@ public class CLIApp {
 			BayesClassifier.classify(settings);
 		}
 		else if(args.length > 0 && Arrays.asList(args).contains("evaluation")) {
-			EvaluationSettings settings = new EvaluationSettings();
+			ClassifierEvaluationSettings settings = new ClassifierEvaluationSettings();
 			
 			settings.outputFile = "results/evaluation-result";
 			settings.mappingFile = "mapping/mapping-categories-en-simple";
+			settings.enArticleDict = "en/en-po_slowach-articles_dict-en-20111201";
+			settings.enArticleCategoryDict = "en/en-po_slowach-categories-en-20111201";
 			settings.bayesClassificationOutputFile = "results/bayes-result";
 			settings.cosineClassificationOutputFile = "results/cosine-result";
 			
-			ClassifierEvaluation.evaluate();
+			ClassifierEvaluation.evaluate(settings);
 		}
 		else {
 			CosineClassificationSettings settings = new CosineClassificationSettings();
