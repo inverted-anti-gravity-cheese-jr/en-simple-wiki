@@ -44,6 +44,7 @@ public class CLIApp {
 			settings.enArticleCategoryDict = "en/en-po_slowach-categories-en-20111201";
 			settings.bayesClassificationOutputFile = "results/bayes-results";
 			settings.cosineClassificationOutputFile = "results/cosine-results";
+			settings.fMeasureBetaValue = 1.0;
 			
 			ClassifierEvaluation.evaluate(settings);
 		}

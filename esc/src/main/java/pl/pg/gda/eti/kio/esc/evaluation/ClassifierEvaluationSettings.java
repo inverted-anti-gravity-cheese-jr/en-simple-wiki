@@ -7,4 +7,5 @@ public class ClassifierEvaluationSettings {
 	public String enArticleCategoryDict;
 	public String mappingFile;
 	public String outputFile;
+	public Double fMeasureBetaValue;
 }
