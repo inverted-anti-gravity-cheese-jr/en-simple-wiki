@@ -29,7 +29,7 @@ public class BayesClassifier {
 
 	public static void classify(BayesClassificationSettings settings) throws IOException {
 		TimeCounter time = new TimeCounter();
-		Map<String, String> predictedCategoriesMap = new TreeMap<>();
+		PredictedCategoriesMap predictedCategoriesMap = new PredictedCategoriesMap();
 
 		DictionaryUtil.articleFinderInit(settings.enArticleDict);
 		DictionaryUtil.categoryFinderInit(settings.simpleCategoryDict);
@@ -148,3 +148,13 @@ public class BayesClassifier {
 }
 
 class BayesClassificationResultMap extends TreeMap<String, Double> {}
+class PredictedCategoriesMap extends TreeMap<String, String> {
+	@Override
+	public String toString() {
+		String response = "";
+		for(Map.Entry<String,String> entry : this.entrySet()) {
+			response += entry.getKey() + "\t" + entry.getValue() + "\n";
+		}
+		return response;
+	}
+}

@@ -4,6 +4,8 @@ package pl.pg.gda.eti.kio.esc;
 import pl.pg.gda.eti.kio.esc.bayes.BayesClassificationSettings;
 import pl.pg.gda.eti.kio.esc.bayes.BayesClassifier;
 import pl.pg.gda.eti.kio.esc.cosine.*;
+import pl.pg.gda.eti.kio.esc.evaluation.ClassifierEvaluation;
+import pl.pg.gda.eti.kio.esc.evaluation.EvaluationSettings;
 
 import java.io.*;
 import java.nio.file.FileSystems;
@@ -22,7 +24,7 @@ public class CLIApp {
 		if(args.length > 0 && Arrays.asList(args).contains("bayes")) {
 			BayesClassificationSettings settings = new BayesClassificationSettings();
 
-			settings.outputFile = "temp/bayes-results";
+			settings.outputFile = "results/bayes-results";
 			settings.enFeatureDict = "en/en-po_slowach-feature_dict-en-20111201";
 			settings.simpleFeatureDict = "simple/temp-po_slowach-feature_dict-simple-20120104";
 			settings.simpleArticleCategoryDict = "simple/temp-po_slowach-categories-simple-20120104";
@@ -32,6 +34,16 @@ public class CLIApp {
 			settings.enArticleDict = "en/en-po_slowach-articles_dict-en-20111201";
 
 			BayesClassifier.classify(settings);
+		}
+		else if(args.length > 0 && Arrays.asList(args).contains("evaluation")) {
+			EvaluationSettings settings = new EvaluationSettings();
+			
+			settings.outputFile = "results/evaluation-result";
+			settings.mappingFile = "mapping/mapping-categories-en-simple";
+			settings.bayesClassificationOutputFile = "results/bayes-result";
+			settings.cosineClassificationOutputFile = "results/cosine-result";
+			
+			ClassifierEvaluation.evaluate();
 		}
 		else {
 			CosineClassificationSettings settings = new CosineClassificationSettings();
@@ -47,7 +59,7 @@ public class CLIApp {
 			settings.enArticleDictionaryFile = "en/en-po_slowach-articles_dict-en-20111201";
 			settings.simpleArticleCategoryRelationFile = "simple/temp-po_slowach-categories-simple-20120104";
 			settings.simpleCategoryDictionaryFile = "simple/temp-po_slowach-cats_dict-simple-20120104";
-			settings.outputFile = "temp-data/cosine-result";
+			settings.outputFile = "results/cosine-result";
 
 			CosineClassifier.classify(settings);
 		}
