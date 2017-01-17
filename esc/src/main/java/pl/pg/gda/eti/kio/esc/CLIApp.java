@@ -42,8 +42,8 @@ public class CLIApp {
 			settings.mappingFile = "mapping/mapping-categories-en-simple";
 			settings.enArticleDict = "en/en-po_slowach-articles_dict-en-20111201";
 			settings.enArticleCategoryDict = "en/en-po_slowach-categories-en-20111201";
-			settings.bayesClassificationOutputFile = "results/bayes-result";
-			settings.cosineClassificationOutputFile = "results/cosine-result";
+			settings.bayesClassificationOutputFile = "results/bayes-results";
+			settings.cosineClassificationOutputFile = "results/cosine-results";
 			
 			ClassifierEvaluation.evaluate(settings);
 		}
@@ -61,7 +61,7 @@ public class CLIApp {
 			settings.enArticleDictionaryFile = "en/en-po_slowach-articles_dict-en-20111201";
 			settings.simpleArticleCategoryRelationFile = "simple/temp-po_slowach-categories-simple-20120104";
 			settings.simpleCategoryDictionaryFile = "simple/temp-po_slowach-cats_dict-simple-20120104";
-			settings.outputFile = "results/cosine-result";
+			settings.outputFile = "results/cosine-results";
 
 			CosineClassifier.classify(settings);
 		}

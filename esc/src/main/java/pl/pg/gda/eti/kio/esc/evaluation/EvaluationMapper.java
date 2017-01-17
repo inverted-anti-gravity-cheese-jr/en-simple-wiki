@@ -2,6 +2,7 @@ package pl.pg.gda.eti.kio.esc.evaluation;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,14 +11,32 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class EvaluationMapper {
-	private static Map<String, String> getCategoryMapping(String mappingFile) {
-		//TODO;
-		return null;
+	private static Map<String, String> getCategoryMapping(String mappingFile) throws IOException {
+		Map<String, String> categoryMapping = new TreeMap<String, String>();
+		File file = new File(mappingFile);
+		BufferedReader stream = new BufferedReader(new FileReader(file));
+		String line;
+		while ((line = stream.readLine()) != null) {
+			String[] elements = line.split("\t");
+			if(elements.length == 3) {
+				categoryMapping.put(elements[0], elements[2]);
+			}
+		}
+		return categoryMapping;
 	}
 	
-	private static Map<String, String> getArticleIdToNameMapping(String enArticleDict) {
-		//TODO;
-		return null;
+	private static Map<String, String> getArticleIdToNameMapping(String enArticleDict) throws IOException {
+		Map<String, String> enArticleIdToNameMapping = new TreeMap<String, String>();
+		File file = new File(enArticleDict);
+		BufferedReader stream = new BufferedReader(new FileReader(file));
+		String line;
+		while ((line = stream.readLine()) != null) {
+			String[] elements = line.split("\t");
+			if(elements.length == 2) {
+				enArticleIdToNameMapping.put(elements[1], elements[0]);
+			}
+		}
+		return enArticleIdToNameMapping;
 	}
 	
 	public static Map<String, List<String>> mapEnArticlesToSimpleCategories(String mappingFile, String enArticleDict, String enArticleCategoryDict) throws IOException {
@@ -40,7 +59,7 @@ public class EvaluationMapper {
 				}
 				String articleName = enArticleIdToNameMapping.get(elements[0]);
 				if(articleName != null) {
-					enArticleToSimpleCategory.put(elements[0], categoryList);
+					enArticleToSimpleCategory.put(articleName, categoryList);
 				}
 			}
 		}

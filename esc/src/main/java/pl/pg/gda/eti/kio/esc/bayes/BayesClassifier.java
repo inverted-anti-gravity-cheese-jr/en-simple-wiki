@@ -9,8 +9,10 @@ import pl.pg.gda.eti.kio.esc.data.Tuple;
 import pl.pg.gda.eti.kio.esc.data.WordFeature;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -140,11 +143,14 @@ public class BayesClassifier {
 		stream.close();
 
 		time.start();
-		DictionaryUtil.saveDictionary(settings.outputFile, predictedCategoriesMap);
+		BufferedWriter writer = new BufferedWriter(new FileWriter(settings.outputFile));
+		writer.write(predictedCategoriesMap.toString());
+		writer.flush();
+		writer.close();
+		
 		time.end();
 		time.printMessage("Saving results");
 	}
-
 }
 
 class BayesClassificationResultMap extends TreeMap<String, Double> {}

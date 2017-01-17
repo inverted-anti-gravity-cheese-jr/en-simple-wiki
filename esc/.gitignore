@@ -5,5 +5,6 @@ esc.iml
 en/
 simple/
 temp-data/
+results/
 *.jar
 *.zip
