@@ -38,7 +38,7 @@ public class CLIApp {
 		else if(args.length > 0 && Arrays.asList(args).contains("evaluation")) {
 			ClassifierEvaluationSettings settings = new ClassifierEvaluationSettings();
 			
-			settings.outputFile = "results/evaluation-result";
+			settings.outputFile = "results/evaluation-results";
 			settings.mappingFile = "mapping/mapping-categories-en-simple";
 			settings.enArticleDict = "en/en-po_slowach-articles_dict-en-20111201";
 			settings.enArticleCategoryDict = "en/en-po_slowach-categories-en-20111201";

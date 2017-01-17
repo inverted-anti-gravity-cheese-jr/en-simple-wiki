@@ -1,9 +1,11 @@
 package pl.pg.gda.eti.kio.esc.evaluation;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +20,15 @@ public class ClassifierEvaluation {
 		Map<String, List<String>> bayesClassificationResults = loadClassificationResults(settings.bayesClassificationOutputFile);
 		Map<String, List<String>> cosineClassificationResults = loadClassificationResults(settings.cosineClassificationOutputFile);
 		
+		BufferedWriter writer = new BufferedWriter(new FileWriter(settings.outputFile));
+		writer.write("Bayes classifier:");
+		writer.newLine();
+		writer.write(compareResultsToExpectedValues(bayesClassificationResults, expectedResults, settings.fMeasureBetaValue).toString());
+		writer.newLine();
+		writer.write("Cosine classifier:");
+		writer.newLine();
+		writer.write(compareResultsToExpectedValues(cosineClassificationResults, expectedResults, settings.fMeasureBetaValue).toString());
+		writer.flush();
 		System.out.println("Bayes: " + compareResultsToExpectedValues(bayesClassificationResults, expectedResults, settings.fMeasureBetaValue));
 		System.out.println("Cosine: " + compareResultsToExpectedValues(cosineClassificationResults, expectedResults, settings.fMeasureBetaValue));
 	}
@@ -76,7 +87,7 @@ public class ClassifierEvaluation {
 		public String toString() {
 			String returnString = "Precision: " + precision + "\n";
 			returnString += "Recall: " + recall + "\n";
-			returnString += "F Measure: " + fMeasure + "\n";
+			returnString += "F"+beta+" Measure: " + fMeasure + "\n";
 			return returnString;
 		}
 	}
