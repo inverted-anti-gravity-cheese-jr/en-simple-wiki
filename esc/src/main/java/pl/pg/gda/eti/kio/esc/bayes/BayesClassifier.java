@@ -32,7 +32,8 @@ import java.util.TreeSet;
  */
 public class BayesClassifier {
 
-	public static final boolean USE_TFIDF = true;
+	public static final boolean USE_TFIDF = false;
+	public static final int RETURNED_CATEGORIES = 2;
 	
 	static <K,V extends Comparable<? super V>>
 	SortedSet<Map.Entry<K,V>> entriesSortedByValues(Map<K,V> map) {
@@ -124,7 +125,7 @@ public class BayesClassifier {
 			//foreach class check if wordfeature exists and count probability
 			for (Map.Entry<String, BayesConditionalProbability.ConditionalProbabilityForClass>
 					conditionalProbabilityForClass : conditionalProbability.entrySet()) {
-				Double bayesClassification = (double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount;;
+				double bayesClassification = 0;
 
 				//String debugStr = "";
 				if(TestingPurposes.DEBUG) {
@@ -138,8 +139,8 @@ public class BayesClassifier {
 						bayesClassification += Math.log(conditionalProbabilityForClass.getValue().conditionalProbabilityForWordInClass.get(wordFeatureInArticle));
 						//debugStr += " * " + conditionalProbabilityForClass.getValue().conditionalProbabilityForWordInClass.get(wordFeatureInArticle) + " [" + wordFeatureInArticle.getWord() + "]";
 					}
-				}
-				//bayesClassification *= (double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount;
+				}			
+				bayesClassification += Math.log((double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount);
 				if(TestingPurposes.DEBUG) {
 					System.out.println("p = " + " = " + bayesClassification);
 				}
@@ -150,7 +151,7 @@ public class BayesClassifier {
 			int count = 0;
 			//System.out.println("Start");
 			for(Map.Entry<String, Double> catPrediction: entriesSortedByValues(bayesClassificationForArticle)) {
-				if(count >= 2) {
+				if(count >= RETURNED_CATEGORIES) {
 					break;
 				}
 				//System.out.println(catPrediction.getKey() + " " + catPrediction.getValue());
