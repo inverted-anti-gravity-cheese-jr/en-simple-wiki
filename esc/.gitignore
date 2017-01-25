@@ -6,5 +6,6 @@ en/
 simple/
 temp-data/
 results/
+mapping/
 *.jar
 *.zip

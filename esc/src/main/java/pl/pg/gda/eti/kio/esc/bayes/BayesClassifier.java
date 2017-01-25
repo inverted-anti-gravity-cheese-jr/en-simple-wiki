@@ -30,6 +30,8 @@ import java.util.TreeMap;
  */
 public class BayesClassifier {
 
+	public static final boolean USE_TFIDF = true;
+
 	public static void classify(BayesClassificationSettings settings) throws IOException {
 		TimeCounter time = new TimeCounter();
 		PredictedCategoriesMap predictedCategoriesMap = new PredictedCategoriesMap();
@@ -107,19 +109,22 @@ public class BayesClassifier {
 					conditionalProbabilityForClass : conditionalProbability.entrySet()) {
 				Double bayesClassification = (double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount;
 
+				//String debugStr = "";
 				if(TestingPurposes.DEBUG) {
 					System.out.println("p(" + conditionalProbabilityForClass.getKey() + ")" + " = " + categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) + " / " + categoryStatistics.articlesCount + " = " + bayesClassification);
+					//debugStr += bayesClassification;
 				}
 
 				//liczba kategorii w klasie przez liczbe wszystkich art 
 				for (WordFeature wordFeatureInArticle : wordFeaturesInArticle) {
 					if(conditionalProbabilityForClass.getValue().conditionalProbabilityForWordInClass.containsKey(wordFeatureInArticle)) {
-						bayesClassification *= conditionalProbabilityForClass.getValue().conditionalProbabilityForWordInClass.get(wordFeatureInArticle);
+						bayesClassification += Math.log(conditionalProbabilityForClass.getValue().conditionalProbabilityForWordInClass.get(wordFeatureInArticle));
+						//debugStr += " * " + conditionalProbabilityForClass.getValue().conditionalProbabilityForWordInClass.get(wordFeatureInArticle) + " [" + wordFeatureInArticle.getWord() + "]";
 					}
 				}
 
 				if(TestingPurposes.DEBUG) {
-					System.out.println("p = " + bayesClassification);
+					System.out.println("p = " + " = " + bayesClassification);
 				}
 				bayesClassificationForArticle.put(conditionalProbabilityForClass.getKey(), bayesClassification);
 			}

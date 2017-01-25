@@ -1,13 +1,14 @@
 package pl.pg.gda.eti.kio.esc.bayes;
 
+import pl.pg.gda.eti.kio.esc.data.Tuple;
 import pl.pg.gda.eti.kio.esc.data.WordFeature;
-import scala.util.parsing.combinator.testing.Str;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Wojciech Stanisławski
@@ -32,7 +33,8 @@ public class BayesWordInCategoryCounter {
 			String artName = line.substring(0, line.indexOf('#'));
 
 			// find words
-			List<String> foundWords = findWordsInArticle(line);
+			List<Tuple<String, Double>> foundWords = new ArrayList<>();
+			double sum = findWordsInArticle(line, foundWords);
 
 			// find category
 			String catName = findCategory(artCatFileName, artName);
@@ -46,15 +48,25 @@ public class BayesWordInCategoryCounter {
 					value = new WordsInCategory();
 					value.wordCountInThisCategory = new TreeMap<>();
 				}
-				value.sumWordCountInThisCategory += foundWords.size();
-				for(String word : foundWords) {
+				if(BayesClassifier.USE_TFIDF) {
+					value.sumWordCountInThisCategory += sum;
+				}
+				else {
+					value.sumWordCountInThisCategory += foundWords.size();
+				}
+				for(Tuple<String, Double> wordWithTfIdf : foundWords) {
+					String word = wordWithTfIdf.getKey();
 					Optional<WordFeature> feature = dictionary.stream().filter(f -> word.equals(f.getSimpleId())).findAny();
 					if(feature.isPresent()) {
+						double newValue = 1;
+						if(BayesClassifier.USE_TFIDF) {
+							newValue = wordWithTfIdf.getValue().doubleValue();
+						}
 						if (value.wordCountInThisCategory.containsKey(feature.get())) {
-							Integer oldCount = value.wordCountInThisCategory.get(feature.get());
-							value.wordCountInThisCategory.put(feature.get(), oldCount + 1);
+							Double oldCount = value.wordCountInThisCategory.get(feature.get());
+							value.wordCountInThisCategory.put(feature.get(), oldCount + newValue);
 						} else {
-							value.wordCountInThisCategory.put(feature.get(), 1);
+							value.wordCountInThisCategory.put(feature.get(), newValue);
 						}
 					}
 				}
@@ -66,14 +78,16 @@ public class BayesWordInCategoryCounter {
 		return resultMap;
 	}
 
-	private List<String> findWordsInArticle(String articleString) {
+	private double findWordsInArticle(String articleString, List<Tuple<String, Double>> foundWords) {
 		String wordsStr = articleString.substring(articleString.indexOf('#') + 1);
 		String[] words = wordsStr.split(" ");
-		List<String> foundWords = new ArrayList<>();
+		double wordCount = 0;
 		for(String word: words) {
-			foundWords.add(word.substring(0, word.indexOf('-')));
+			double tfidf = Double.parseDouble(word.substring(word.indexOf('-') + 1));
+			foundWords.add(new Tuple<String, Double>(word.substring(0, word.indexOf('-')), tfidf));
+			wordCount += tfidf;
 		}
-		return foundWords;
+		return wordCount;
 	}
 
 	private String findCategory(String artCatFileName, String artName) throws IOException {
@@ -98,8 +112,8 @@ public class BayesWordInCategoryCounter {
 
 	public class WordsInCategory {
 		public String category;
-		public /* kluczem jest nazwa słowa */ Map<WordFeature, Integer> wordCountInThisCategory;
-		public int sumWordCountInThisCategory;
+		public /* kluczem jest nazwa słowa */ Map<WordFeature, Double> wordCountInThisCategory;
+		public double sumWordCountInThisCategory;
 
 		@Override
 		public String toString() {
