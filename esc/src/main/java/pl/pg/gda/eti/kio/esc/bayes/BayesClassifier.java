@@ -22,7 +22,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * @author Wojciech Stanisławski, Krzysztof Świeczkowski
@@ -31,7 +33,22 @@ import java.util.TreeMap;
 public class BayesClassifier {
 
 	public static final boolean USE_TFIDF = true;
-
+	
+	static <K,V extends Comparable<? super V>>
+	SortedSet<Map.Entry<K,V>> entriesSortedByValues(Map<K,V> map) {
+	    SortedSet<Map.Entry<K,V>> sortedEntries = new TreeSet<Map.Entry<K,V>>(
+	        new Comparator<Map.Entry<K,V>>() {
+	            @Override public int compare(Map.Entry<K,V> e1, Map.Entry<K,V> e2) {
+	                int res = -1 * e1.getValue().compareTo(e2.getValue());
+	                return res != 0 ? res : -1;
+	            }
+	        }
+	    );
+	    sortedEntries.addAll(map.entrySet());
+	    return sortedEntries;
+	}
+	
+	
 	public static void classify(BayesClassificationSettings settings) throws IOException {
 		TimeCounter time = new TimeCounter();
 		PredictedCategoriesMap predictedCategoriesMap = new PredictedCategoriesMap();
@@ -107,7 +124,7 @@ public class BayesClassifier {
 			//foreach class check if wordfeature exists and count probability
 			for (Map.Entry<String, BayesConditionalProbability.ConditionalProbabilityForClass>
 					conditionalProbabilityForClass : conditionalProbability.entrySet()) {
-				Double bayesClassification = 0.0;
+				Double bayesClassification = (double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount;;
 
 				//String debugStr = "";
 				if(TestingPurposes.DEBUG) {
@@ -122,21 +139,27 @@ public class BayesClassifier {
 						//debugStr += " * " + conditionalProbabilityForClass.getValue().conditionalProbabilityForWordInClass.get(wordFeatureInArticle) + " [" + wordFeatureInArticle.getWord() + "]";
 					}
 				}
-				bayesClassification *= (double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount;
+				//bayesClassification *= (double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount;
 				if(TestingPurposes.DEBUG) {
 					System.out.println("p = " + " = " + bayesClassification);
 				}
 				bayesClassificationForArticle.put(conditionalProbabilityForClass.getKey(), bayesClassification);
 			}
-			// get best prediction
-			for(Map.Entry<String, Double> catPrediction: bayesClassificationForArticle.entrySet()) {
-				if(predictedValue == null || catPrediction.getValue() > predictedValue.getValue()) {
-					predictedValue = catPrediction;
+			// get best prediction			
+			List<String> predictedCategoriesList = new ArrayList<String>();
+			int count = 0;
+			//System.out.println("Start");
+			for(Map.Entry<String, Double> catPrediction: entriesSortedByValues(bayesClassificationForArticle)) {
+				if(count >= 2) {
+					break;
 				}
+				//System.out.println(catPrediction.getKey() + " " + catPrediction.getValue());
+				predictedCategoriesList.add(DictionaryUtil.findCategoryName(catPrediction.getKey()));
+				count++;
 			}
 			String articleName = DictionaryUtil.findArticleName(articleId);
-			String categoryName = DictionaryUtil.findCategoryName(predictedValue.getKey());
-			predictedCategoriesMap.put(articleName, categoryName);
+			//String categoryName = DictionaryUtil.findCategoryName(catPrediction.getKey());
+			predictedCategoriesMap.put(articleName, predictedCategoriesList);
 			currentLineCounter++;
 			if(currentLineCounter % 2000 == 0) {
 			time.end();
@@ -159,12 +182,21 @@ public class BayesClassifier {
 }
 
 class BayesClassificationResultMap extends TreeMap<String, Double> {}
-class PredictedCategoriesMap extends TreeMap<String, String> {
+class PredictedCategoriesMap extends TreeMap<String, List<String>> {
 	@Override
 	public String toString() {
 		String response = "";
-		for(Map.Entry<String,String> entry : this.entrySet()) {
-			response += entry.getKey() + "\t" + entry.getValue() + "\n";
+		for(Map.Entry<String,List<String>> entry : this.entrySet()) {
+			response += entry.getKey() + "\t";
+			for(int i = 0; i < entry.getValue().size(); i++ ) {
+				response += entry.getValue().get(i);
+				if(i==entry.getValue().size()-1) {
+					response += "\n";
+				}
+				else {
+					response += "\t";
+				}
+			}
 		}
 		return response;
 	}
