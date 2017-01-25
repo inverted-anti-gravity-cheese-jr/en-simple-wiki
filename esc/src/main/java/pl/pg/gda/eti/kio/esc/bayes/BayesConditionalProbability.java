@@ -24,7 +24,7 @@ public class BayesConditionalProbability {
 			ConditionalProbabilityForClass conditionalProbabilityForClass = new ConditionalProbabilityForClass(categoryId);
 			//foreach word
 			for(WordFeature word: words) {
-				int occurances = 0;
+				double occurances = 0;
 				if(wordsInCategory.wordCountInThisCategory.containsKey(word)) {
 					occurances = wordsInCategory.wordCountInThisCategory.get(word);
 				}
