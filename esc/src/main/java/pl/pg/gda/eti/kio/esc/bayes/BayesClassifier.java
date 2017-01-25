@@ -107,7 +107,7 @@ public class BayesClassifier {
 			//foreach class check if wordfeature exists and count probability
 			for (Map.Entry<String, BayesConditionalProbability.ConditionalProbabilityForClass>
 					conditionalProbabilityForClass : conditionalProbability.entrySet()) {
-				Double bayesClassification = (double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount;
+				Double bayesClassification = 0.0;
 
 				//String debugStr = "";
 				if(TestingPurposes.DEBUG) {
@@ -122,7 +122,7 @@ public class BayesClassifier {
 						//debugStr += " * " + conditionalProbabilityForClass.getValue().conditionalProbabilityForWordInClass.get(wordFeatureInArticle) + " [" + wordFeatureInArticle.getWord() + "]";
 					}
 				}
-
+				bayesClassification *= (double) categoryStatistics.articlesInCategoriesCount.get(conditionalProbabilityForClass.getKey()) / categoryStatistics.articlesCount;
 				if(TestingPurposes.DEBUG) {
 					System.out.println("p = " + " = " + bayesClassification);
 				}
